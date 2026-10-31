@@ -659,6 +659,21 @@
     tabSignup.setAttribute('aria-selected', String(!isLogin));
     panelLogin.classList.toggle('hidden', !isLogin);
     panelSignup.classList.toggle('hidden', isLogin);
+
+    // In signup mode, restrict role selection to student and alumni
+    const privilegedBadges = document.querySelectorAll('.role-badge[data-role="admin"], .role-badge[data-role="faculty"]');
+    privilegedBadges.forEach(b => {
+      b.style.display = isLogin ? '' : 'none';
+    });
+
+    if (!isLogin && (selectedRole === 'admin' || selectedRole === 'faculty')) {
+      const studentBadge = document.querySelector('.role-badge[data-role="student"]');
+      if (studentBadge) {
+        roleBadges.forEach(b => b.setAttribute('aria-pressed', 'false'));
+        studentBadge.setAttribute('aria-pressed', 'true');
+        selectedRole = 'student';
+      }
+    }
   }
 
   tabLogin.addEventListener('click',  () => showPanel('login'));
@@ -733,6 +748,11 @@
     if (password.length < 8)          { setError('f-signup-password', true);  valid = false; } else setError('f-signup-password', false);
     if (confirm !== password || !confirm){ setError('f-signup-confirm', true); valid = false; } else setError('f-signup-confirm', false);
     if (!valid) return;
+
+    if (selectedRole === 'admin' || selectedRole === 'faculty') {
+      showToast('Admin and Faculty accounts must be provisioned by an administrator.');
+      return;
+    }
 
     const btn = document.getElementById('btn-signup');
     btn.disabled = true; btn.textContent = 'Creating account…';

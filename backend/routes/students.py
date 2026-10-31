@@ -66,26 +66,123 @@ def get_my_courses():
 @students_bp.post("/me/courses/<course_id>/register")
 @role_required("student")
 def register_course(course_id):
-    """Hand-written waitlist logic — replaces the Supabase trigger."""
+    """
+    Registers a student for a course with row-level locking to prevent race conditions.
+    If capacity is available, enrolls the student; otherwise assigns an ordered waitlist position.
+    """
     student_id = get_jwt_identity()
-    course = Course.query.get(course_id)
+
+    # Lock the course row to prevent race conditions during concurrent registration
+    course = Course.query.with_for_update().get(course_id)
     if not course:
         return jsonify({"error": "Course not found"}), 404
 
     if Registration.query.filter_by(student_id=student_id, course_id=course_id).first():
         return jsonify({"error": "Already registered or waitlisted for this course"}), 409
 
-    if course.seats_filled < course.capacity:
-        reg = Registration(student_id=student_id, course_id=course_id, status="registered")
-        course.seats_filled += 1
-    else:
-        waitlist_count = Registration.query.filter_by(course_id=course_id, status="waitlisted").count()
-        reg = Registration(student_id=student_id, course_id=course_id,
-                            status="waitlisted", waitlist_position=waitlist_count + 1)
+    confirmed_count = Registration.query.filter_by(course_id=course_id, status="registered").count()
 
-    db.session.add(reg)
+    if confirmed_count < course.capacity:
+        reg = Registration(student_id=student_id, course_id=course_id, status="registered", waitlist_position=None)
+        course.seats_filled = confirmed_count + 1
+        db.session.add(reg)
+        db.session.commit()
+        return jsonify({
+            "status": "registered",
+            "waitlist_position": None,
+            "message": f"Successfully registered for {course.name}."
+        }), 201
+    else:
+        # Determine highest existing waitlist position
+        max_pos = db.session.query(db.func.max(Registration.waitlist_position)).filter_by(
+            course_id=course_id, status="waitlisted"
+        ).scalar() or 0
+        next_pos = max_pos + 1
+        reg = Registration(student_id=student_id, course_id=course_id, status="waitlisted", waitlist_position=next_pos)
+        db.session.add(reg)
+        db.session.commit()
+        return jsonify({
+            "status": "waitlisted",
+            "waitlist_position": next_pos,
+            "message": f"Course capacity reached. Placed on waitlist at position #{next_pos}."
+        }), 201
+
+
+@students_bp.route("/me/courses/<course_id>/drop", methods=["POST", "DELETE"])
+@role_required("student")
+def drop_course(course_id):
+    """
+    Drops a confirmed registration or cancels a waitlist entry.
+    When a confirmed seat is vacated, the earliest waitlisted student is automatically promoted.
+    """
+    student_id = get_jwt_identity()
+
+    course = Course.query.with_for_update().get(course_id)
+    if not course:
+        return jsonify({"error": "Course not found"}), 404
+
+    reg = Registration.query.filter_by(student_id=student_id, course_id=course_id).first()
+    if not reg:
+        return jsonify({"error": "You are not registered or waitlisted for this course"}), 404
+
+    was_registered = (reg.status == "registered")
+    was_waitlist_pos = reg.waitlist_position
+
+    db.session.delete(reg)
+    db.session.flush()
+
+    promoted_student_id = None
+
+    if was_registered:
+        # Find earliest eligible waitlisted student
+        next_waitlisted = Registration.query.filter_by(
+            course_id=course_id, status="waitlisted"
+        ).order_by(
+            Registration.waitlist_position.asc(),
+            Registration.created_at.asc()
+        ).first()
+
+        if next_waitlisted:
+            # Promote waitlisted student into the available seat
+            next_waitlisted.status = "registered"
+            next_waitlisted.waitlist_position = None
+            promoted_student_id = next_waitlisted.student_id
+
+            # Re-index remaining waitlisted students
+            remaining = Registration.query.filter_by(
+                course_id=course_id, status="waitlisted"
+            ).order_by(Registration.waitlist_position.asc()).all()
+            for idx, r in enumerate(remaining, start=1):
+                r.waitlist_position = idx
+        else:
+            # No waitlist exists; update seat counter
+            actual_confirmed = Registration.query.filter_by(course_id=course_id, status="registered").count()
+            course.seats_filled = actual_confirmed
+    else:
+        # Student was waitlisted; decrement positions of students behind them
+        if was_waitlist_pos:
+            subsequent = Registration.query.filter(
+                Registration.course_id == course_id,
+                Registration.status == "waitlisted",
+                Registration.waitlist_position > was_waitlist_pos
+            ).order_by(Registration.waitlist_position.asc()).all()
+            for r in subsequent:
+                r.waitlist_position -= 1
+
     db.session.commit()
-    return jsonify({"status": reg.status, "waitlist_position": reg.waitlist_position}), 201
+
+    return jsonify({
+        "message": f"Successfully dropped {course.name}.",
+        "promoted_student_id": promoted_student_id,
+        "seats_filled": course.seats_filled,
+        "capacity": course.capacity
+    }), 200
+
+
+@students_bp.delete("/me/courses/<course_id>")
+@role_required("student")
+def delete_course_registration(course_id):
+    return drop_course(course_id)
 
 
 @students_bp.get("/me/attendance")

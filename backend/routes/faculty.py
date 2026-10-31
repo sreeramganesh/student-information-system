@@ -101,6 +101,9 @@ def class_list(course_id):
     return jsonify(result), 200
 
 
+ALLOWED_ATTENDANCE_STATUSES = {"present", "absent"}
+
+
 @faculty_bp.post("/courses/<course_id>/attendance")
 @role_required("faculty")
 def submit_attendance(course_id):
@@ -112,16 +115,40 @@ def submit_attendance(course_id):
     records = data.get("records", [])
     today = date.today()
 
+    if not records:
+        return jsonify({"error": "No attendance records provided"}), 400
+
+    # Ensure attendance is only marked for students confirmed in this course
+    enrolled_student_ids = {
+        r.student_id for r in Registration.query.filter_by(course_id=course_id, status="registered").all()
+    }
+
+    # Validate all statuses and enrolled students before making changes
     for r in records:
+        status_val = (r.get("status") or "").strip().lower()
+        if status_val not in ALLOWED_ATTENDANCE_STATUSES:
+            return jsonify({
+                "error": f"Invalid attendance status '{r.get('status')}'. "
+                         f"Allowed values are: {sorted(ALLOWED_ATTENDANCE_STATUSES)}"
+            }), 400
+
+        student_id = r.get("student_id")
+        if student_id not in enrolled_student_ids:
+            return jsonify({
+                "error": f"Student '{student_id}' is not enrolled in this course."
+            }), 400
+
+    for r in records:
+        status_val = r["status"].strip().lower()
         existing = Attendance.query.filter_by(
             student_id=r["student_id"], course_id=course_id, class_date=today
         ).first()
         if existing:
-            existing.status = r["status"]
+            existing.status = status_val
         else:
             db.session.add(Attendance(
                 student_id=r["student_id"], course_id=course_id,
-                class_date=today, status=r["status"], marked_by=faculty_id,
+                class_date=today, status=status_val, marked_by=faculty_id,
             ))
 
     db.session.commit()

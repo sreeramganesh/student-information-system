@@ -18,9 +18,11 @@ A production-ready, full-stack **Student Information System (SIS)** designed for
 ## 🌟 Key Capabilities & System Features
 
 ### 🔐 1. Authentication & Security
-- **JWT (JSON Web Token) Authorization**: Stateless token-based session handling with cryptographic signing.
+- **JWT (JSON Web Token) Authorization**: Stateless token-based session handling with cryptographic signing. In production, strong random keys are strictly required (insecure fallback defaults are rejected).
 - **Bcrypt Password Hashing**: Industry-standard salt rounds ensuring zero plain-text passwords stored.
 - **Role-Based Access Control (RBAC)**: Custom Python decorators (`@role_required`) enforce strict role permissions (`student`, `faculty`, `admin`, `alumni`) across all API routes.
+- **Restricted Public Registration**: Public self-registration is limited to `student` and `alumni`. Privileged `admin` and `faculty` accounts cannot be self-registered and must be provisioned by administrators via `POST /api/admin/users`.
+- **Restricted CORS Policy**: Wildcard (`*`) origin access is blocked in production; strict origin allowlists are enforced for frontend deployments.
 - **Frontend Route Guards**: Automated redirect handlers checking token integrity and user roles on page load.
 
 ---
@@ -29,16 +31,16 @@ A production-ready, full-stack **Student Information System (SIS)** designed for
 
 #### 🎓 Student Portal (`/student`)
 - **Academic Dashboard**: High-level overview displaying CGPA, overall attendance percentage, enrolled courses, and fee balance.
-- **Smart Course Registration**: Real-time course catalog with seat counter and one-click enrollment.
-- **Automated Waitlisting Engine**: When a course reaches capacity, students are automatically queued into an ordered waitlist (`waitlist_position`).
-- **Subject-Wise Attendance**: Real-time breakdown of classes held vs. attended, percentage tracking, and automatic visual warnings for attendance falling below the mandatory 75% threshold.
+- **Smart Course Registration & Automatic Waitlist Promotion**: Real-time course catalog with capacity enforcement and concurrency-safe locking (`with_for_update()`). When a course is full, students are placed on an ordered waitlist (`waitlist_position`). When an enrolled student drops a course, the earliest waitlisted student is automatically promoted to confirmed status, and subsequent waitlist positions re-index automatically.
+- **Course Drop / Cancellation**: Students can cancel confirmed registrations or leave waitlists at any time from the portal.
+- **Subject-Wise Attendance**: Real-time breakdown of classes held vs. attended (`present`, `absent`), percentage tracking, and automatic visual warnings for attendance falling below the mandatory 75% threshold.
 - **Grade Cards & Published Results**: Instant view of internal assessments, semester exams, and final letter grades.
 - **Fee Management & Receipts**: Complete ledger displaying total tuition fees, amount paid, outstanding balances, and official receipt numbers.
 - **Records Office Transcripts**: Request official academic transcripts for internships, higher studies, or employment directly from the portal.
 
 #### 👨‍🏫 Faculty Portal (`/faculty`)
 - **Class Rosters**: Instant list of students registered in assigned courses with real-time attendance averages.
-- **Attendance Tracker**: Streamlined daily attendance marking (Present, Absent, On Leave) with automatic deduplication per date.
+- **Attendance Tracker**: Streamlined daily attendance marking (`Present`, `Absent`) with backend constraint validation and automatic deduplication per date.
 - **Assessment Marks Entry**: Upload marks for internal assessments, cycle tests, and assignments.
 - **Semester Grade Publishing**: Enter internal/external marks and publish final semester grades to students.
 - **Faculty Profile Management**: Maintain office hours, department affiliations, and contact details.
@@ -116,7 +118,7 @@ The database schema is normalized and optimized with foreign key constraints, ca
 | `alumni` | Alumni profiles, graduation batch, employer info |
 | `courses` | Academic course catalog, assigned faculty ID, capacity, and seat counters |
 | `registrations` | Course registrations with `registered` or `waitlisted` status and queue position |
-| `attendance` | Daily attendance records marked by faculty (`present`, `absent`, `on_leave`) |
+| `attendance` | Daily attendance records marked by faculty (`present`, `absent`) |
 | `marks` | Internal and assessment scores per subject |
 | `results` | Final semester examination results (internal, external, grade, published flag) |
 | `fees` | Student fee ledger, receipt numbers, amounts, due dates, and payment status |
@@ -179,6 +181,12 @@ python backend/app.py
 ```
 Open your browser and navigate to:
 👉 **`http://localhost:5000`**
+
+### 7. Run Automated Test Suite
+Execute the comprehensive security, waitlist, attendance, and regression test suite:
+```powershell
+python backend/test_suite.py
+```
 
 ---
 

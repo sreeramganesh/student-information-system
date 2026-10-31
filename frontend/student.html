@@ -320,11 +320,11 @@ async function loadRegistrations(){
     let statusHtml, actionHtml;
     if (c.status === 'registered'){
       statusHtml = '<span class="tag good">Registered</span>';
-      actionHtml = '<button class="tbl-btn" disabled>Registered</button>';
+      actionHtml = `<button class="tbl-btn" style="border-color:#e06d6d;color:#c92a2a;" onclick="dropCourse('${c.id}')">Drop</button>`;
       registeredCount++;
     } else if (c.status === 'waitlisted'){
       statusHtml = `<span class="tag warn">Waitlisted · #${c.waitlist_position}</span>`;
-      actionHtml = '<button class="tbl-btn" disabled>Waitlisted</button>';
+      actionHtml = `<button class="tbl-btn" onclick="dropCourse('${c.id}')">Leave Waitlist</button>`;
       waitlistedCount++;
     } else {
       statusHtml = '<span class="tag neutral">Not registered</span>';
@@ -341,8 +341,19 @@ async function loadRegistrations(){
 
 async function registerCourse(courseId){
   try {
-    await api(`/students/me/courses/${courseId}/register`, { method: 'POST' });
-    showToast('Registration submitted.');
+    const res = await api(`/students/me/courses/${courseId}/register`, { method: 'POST' });
+    showToast(res.message || 'Registration submitted.');
+    await loadRegistrations();
+  } catch (err) {
+    showToast(err.message);
+  }
+}
+
+async function dropCourse(courseId){
+  if (!confirm('Are you sure you want to drop or leave the waitlist for this course?')) return;
+  try {
+    const res = await api(`/students/me/courses/${courseId}/drop`, { method: 'POST' });
+    showToast(res.message || 'Course registration cancelled.');
     await loadRegistrations();
   } catch (err) {
     showToast(err.message);

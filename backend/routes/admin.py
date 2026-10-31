@@ -1,10 +1,63 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import get_jwt_identity
-from extensions import db
-from models import User, Student, Faculty, Course, Registration, Attendance, Result, Fee
+from extensions import db, bcrypt
+from models import User, Student, Faculty, Alumni, Course, Registration, Attendance, Result, Fee
 from utils.decorators import role_required
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/api/admin")
+
+ADMIN_PROVISIONABLE_ROLES = {"admin", "faculty", "student", "alumni"}
+
+
+@admin_bp.post("/users")
+@role_required("admin")
+def create_user():
+    """Secure administrator endpoint to provision accounts (including admin and faculty)."""
+    data = request.get_json(force=True) or {}
+    full_name = (data.get("full_name") or "").strip()
+    email = (data.get("email") or "").strip().lower()
+    username = (data.get("username") or "").strip()
+    password = data.get("password") or ""
+    role = (data.get("role") or "").strip().lower()
+    department = (data.get("department") or "").strip() or None
+    faculty_code = (data.get("faculty_code") or username).strip()
+    roll_no = (data.get("roll_no") or username).strip()
+    office_hours = (data.get("office_hours") or "").strip() or None
+
+    if not all([full_name, email, username, password, role]):
+        return jsonify({"error": "full_name, email, username, password, and role are all required"}), 400
+
+    if role not in ADMIN_PROVISIONABLE_ROLES:
+        return jsonify({"error": f"role must be one of {sorted(ADMIN_PROVISIONABLE_ROLES)}"}), 400
+
+    if len(password) < 8:
+        return jsonify({"error": "Password must be at least 8 characters"}), 400
+
+    if User.query.filter((User.email == email) | (User.username == username)).first():
+        return jsonify({"error": "An account with that email or username already exists"}), 409
+
+    user = User(
+        full_name=full_name,
+        email=email,
+        username=username,
+        password_hash=bcrypt.generate_password_hash(password).decode("utf-8"),
+        role=role,
+    )
+    db.session.add(user)
+    db.session.flush()
+
+    if role == "student":
+        db.session.add(Student(id=user.id, roll_no=roll_no, department=department))
+    elif role == "faculty":
+        db.session.add(Faculty(id=user.id, faculty_code=faculty_code, department=department, office_hours=office_hours))
+    elif role == "alumni":
+        db.session.add(Alumni(id=user.id, roll_no=roll_no, department=department))
+
+    db.session.commit()
+    return jsonify({
+        "message": f"{role.capitalize()} account created successfully.",
+        "user": user.to_dict()
+    }), 201
 
 
 @admin_bp.get("/me")

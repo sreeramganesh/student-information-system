@@ -5,7 +5,10 @@ from models import User, Student, Faculty, Alumni
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
-ALLOWED_ROLES = {"student", "faculty", "admin", "alumni"}
+# Public signup is strictly restricted to student and alumni accounts.
+# Administrator and Faculty accounts must be provisioned through secure administrator endpoints.
+PUBLIC_REGISTRATION_ROLES = {"student", "alumni"}
+ALLOWED_SYSTEM_ROLES = {"student", "faculty", "admin", "alumni"}
 
 
 @auth_bp.post("/signup")
@@ -15,12 +18,24 @@ def signup():
     email = (data.get("email") or "").strip().lower()
     username = (data.get("username") or "").strip()
     password = data.get("password") or ""
-    role = data.get("role")
+    role = (data.get("role") or "").strip().lower()
 
     if not all([full_name, email, username, password, role]):
         return jsonify({"error": "full_name, email, username, password, and role are all required"}), 400
-    if role not in ALLOWED_ROLES:
-        return jsonify({"error": f"role must be one of {sorted(ALLOWED_ROLES)}"}), 400
+
+    # Explicitly block privileged roles from public registration
+    if role in {"admin", "faculty"}:
+        return jsonify({
+            "error": f"Public registration for '{role}' accounts is disabled. "
+                     "Administrator and Faculty accounts must be provisioned by a system administrator."
+        }), 403
+
+    if role not in PUBLIC_REGISTRATION_ROLES:
+        return jsonify({"error": f"Invalid role. Public registration only supports: {sorted(PUBLIC_REGISTRATION_ROLES)}"}), 400
+
+    if len(username) < 4:
+        return jsonify({"error": "Username must be at least 4 characters"}), 400
+
     if len(password) < 8:
         return jsonify({"error": "Password must be at least 8 characters"}), 400
 
@@ -37,8 +52,6 @@ def signup():
 
     if role == "student":
         db.session.add(Student(id=user.id, roll_no=username))
-    elif role == "faculty":
-        db.session.add(Faculty(id=user.id, faculty_code=username))
     elif role == "alumni":
         db.session.add(Alumni(id=user.id, roll_no=username))
 
