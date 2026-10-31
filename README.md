@@ -1,169 +1,192 @@
-# Student Information System (SIS)
+# 🎓 Student Information System (SIS)
 
-A comprehensive Student Information System built with a **Flask (Python)** backend, **MySQL** database, and a vanilla **HTML/CSS/JavaScript** frontend.
+[![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.14-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/Flask-3.0.3-black?logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-orange?logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![JWT](https://img.shields.io/badge/Auth-JWT%20Bearer-red?logo=jsonwebtokens&logoColor=white)](https://jwt.io/)
+[![Vercel](https://img.shields.io/badge/Deploy-Vercel%20Serverless-black?logo=vercel&logoColor=white)](https://vercel.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
----
-
-## 🛠️ Prerequisites
-
-Before running the project, ensure you have:
-1. **Python 3.10+** (verified working on Python 3.14)
-2. **MySQL Server 8.x** running locally (e.g., MySQL Community Server or XAMPP MySQL)
-3. A web browser (Chrome, Edge, Firefox, etc.)
+A production-ready, full-stack **Student Information System (SIS)** designed for colleges and universities. Built with a high-performance **Python Flask** REST API, a normalized **MySQL** database, and a responsive **HTML5/CSS3/JavaScript** frontend with role-based access control.
 
 ---
 
-## 🚀 Quick Start Guide
+## 🌟 Key Capabilities & System Features
 
-### 1. Configure the Database
-
-1. Ensure MySQL service is running on your machine.
-2. The database configuration is stored in [`backend/.env`](backend/.env):
-   ```env
-   DB_HOST=127.0.0.1
-   DB_PORT=3306
-   DB_USER=root
-   DB_PASSWORD=your_mysql_password
-   DB_NAME=sis_db
-   DATABASE_URL=mysql+pymysql://root:your_mysql_password@127.0.0.1:3306/sis_db
-   JWT_SECRET_KEY=sis_dev_secret_jwt_key_2026_x791a
-   FLASK_ENV=development
-   CORS_ORIGINS=*
-   ```
-   *(Adjust `DB_PASSWORD` if your MySQL root password is different)*
-
-3. If setting up a fresh database, import the schema from [`backend/mysql-schema.sql`](backend/mysql-schema.sql):
-   ```powershell
-   mysql -u root -p sis_db < backend/mysql-schema.sql
-   ```
+### 🔐 1. Authentication & Security
+- **JWT (JSON Web Token) Authorization**: Stateless token-based session handling with cryptographic signing.
+- **Bcrypt Password Hashing**: Industry-standard salt rounds ensuring zero plain-text passwords stored.
+- **Role-Based Access Control (RBAC)**: Custom Python decorators (`@role_required`) enforce strict role permissions (`student`, `faculty`, `admin`, `alumni`) across all API routes.
+- **Frontend Route Guards**: Automated redirect handlers checking token integrity and user roles on page load.
 
 ---
 
-### 2. Install Python Dependencies
+### 👥 2. Role-Based Portals
 
-Open a terminal in the project root directory and run:
+#### 🎓 Student Portal (`/student`)
+- **Academic Dashboard**: High-level overview displaying CGPA, overall attendance percentage, enrolled courses, and fee balance.
+- **Smart Course Registration**: Real-time course catalog with seat counter and one-click enrollment.
+- **Automated Waitlisting Engine**: When a course reaches capacity, students are automatically queued into an ordered waitlist (`waitlist_position`).
+- **Subject-Wise Attendance**: Real-time breakdown of classes held vs. attended, percentage tracking, and automatic visual warnings for attendance falling below the mandatory 75% threshold.
+- **Grade Cards & Published Results**: Instant view of internal assessments, semester exams, and final letter grades.
+- **Fee Management & Receipts**: Complete ledger displaying total tuition fees, amount paid, outstanding balances, and official receipt numbers.
+- **Records Office Transcripts**: Request official academic transcripts for internships, higher studies, or employment directly from the portal.
 
-```powershell
-pip install -r backend/requirements.txt
+#### 👨‍🏫 Faculty Portal (`/faculty`)
+- **Class Rosters**: Instant list of students registered in assigned courses with real-time attendance averages.
+- **Attendance Tracker**: Streamlined daily attendance marking (Present, Absent, On Leave) with automatic deduplication per date.
+- **Assessment Marks Entry**: Upload marks for internal assessments, cycle tests, and assignments.
+- **Semester Grade Publishing**: Enter internal/external marks and publish final semester grades to students.
+- **Faculty Profile Management**: Maintain office hours, department affiliations, and contact details.
+
+#### 🛡️ Administrator Portal (`/admin`)
+- **Executive Institutional Metrics**: High-level counters for total student body, active faculty members, course catalog size, total fees outstanding, and overdue accounts.
+- **User Directory**: Search and monitor all registered students and faculty records.
+- **Course Administration**: Create new academic courses, assign faculty instructors, and configure seat capacities.
+- **Financial Auditing**: View all fee transactions, pending payments, and revenue collection.
+- **Academic Reports**: Automated analytical reports identifying at-risk students with attendance below 75% and tracking exam result publication progress across departments.
+
+#### 🏛️ Alumni Network Portal (`/alumni`)
+- **Career & Profile Records**: Keep graduation year, department, and current employer details updated.
+- **Historical Fee Ledgers**: Lifetime access to past payment records and tuition fee clearance statements.
+- **Official Transcript Requests**: On-demand transcript applications for graduate school or international verifications with delivery status tracking.
+
+---
+
+### 📝 3. Student Admission & Profile Onboarding (`/complete-profile`)
+- **Post-Registration Verification**: Newly registered students complete an institutional admission profile before gaining dashboard access.
+- **Personal & Family Data**: Collects DOB, nationality, community category, parent/guardian name, occupation, annual income, and address.
+- **Qualifying Examination Records**: Captures board of education, course opted, and subject-wise 12th/HSC marks with automatic aggregate calculation.
+
+---
+
+## 🏗️ Technical Architecture & Stack
+
+```text
+SIS/
+├── api/
+│   └── index.py                # Serverless WSGI entrypoint for Vercel deployment
+├── backend/
+│   ├── app.py                  # Flask app factory, static/SPA routing, CORS setup
+│   ├── config.py               # Environment configuration & DB connection builder
+│   ├── extensions.py           # SQLAlchemy, Migrate, JWTManager, Bcrypt setup
+│   ├── models.py               # 13 SQLAlchemy ORM models with relations & constraints
+│   ├── mysql-schema.sql        # MySQL table definitions, foreign keys, and indexes
+│   ├── requirements.txt        # Backend dependencies
+│   ├── test_connection.py      # Database connection & schema test script
+│   ├── routes/                 # Modular API blueprints
+│   │   ├── auth.py             # Signup, login, JWT token verification
+│   │   ├── students.py         # Student records, courses, attendance, fees
+│   │   ├── faculty.py          # Faculty courses, attendance marking, grading
+│   │   ├── admin.py            # System analytics, course catalog, audit reports
+│   │   └── alumni.py           # Alumni directory & transcript services
+│   └── utils/
+│       ├── db.py               # Direct PyMySQL connection helper
+│       └── decorators.py       # Role-based access control (@role_required)
+├── frontend/
+│   ├── login.html              # Multi-role authentication portal (Tabs: Student/Faculty/Admin/Alumni)
+│   ├── student.html            # Student dashboard
+│   ├── faculty.html            # Faculty portal
+│   ├── admin.html              # Administrator overview
+│   ├── alumni.html             # Alumni portal
+│   ├── complete-profile.html   # Post-signup admission profile onboarding
+│   ├── api-client.js           # Fetch wrapper with JWT headers and dynamic origin detection
+│   ├── dashboard.js            # Shared UI utilities, mobile navigation, toast messages
+│   └── dashboard.css           # Modern design system with CSS custom properties
+├── requirements.txt            # Root dependencies for cloud buildpacks (Vercel)
+├── vercel.json                 # Vercel serverless rewrites and static asset routing
+└── .gitignore                  # Git ignore rules protecting .env and cache files
 ```
 
-> **Note:** PyMySQL requires the `cryptography` library for MySQL 8+ `caching_sha2_password` authentication (already included in `requirements.txt`).
+---
+
+## 🗄️ Database Architecture (13 Relational Tables)
+
+The database schema is normalized and optimized with foreign key constraints, cascading deletes, and unique constraints:
+
+| Table | Purpose |
+| :--- | :--- |
+| `users` | Base authentication table storing credentials, bcrypt hash, role, and email |
+| `students` | Student profiles, roll number, department, semester, CGPA, profile completion flag |
+| `faculty` | Faculty profiles, faculty code, department, office hours |
+| `alumni` | Alumni profiles, graduation batch, employer info |
+| `courses` | Academic course catalog, assigned faculty ID, capacity, and seat counters |
+| `registrations` | Course registrations with `registered` or `waitlisted` status and queue position |
+| `attendance` | Daily attendance records marked by faculty (`present`, `absent`, `on_leave`) |
+| `marks` | Internal and assessment scores per subject |
+| `results` | Final semester examination results (internal, external, grade, published flag) |
+| `fees` | Student fee ledger, receipt numbers, amounts, due dates, and payment status |
+| `transcript_requests` | Formal transcript requests, purpose, destination email, and processing status |
+| `admission_details` | Detailed admission demographic information and parent details |
+| `hsc_subject_marks` | Subject-wise qualifying exam marks for admission verification |
 
 ---
 
-### 3. Test Database Connection
+## 🚀 Local Installation & Quick Start
 
-Verify that your backend can communicate with MySQL:
+### 1. Prerequisites
+- **Python 3.10+** (tested on Python 3.14)
+- **MySQL Server 8.0+** (MySQL Community Server or XAMPP)
+- **Git**
 
+### 2. Clone and Setup
+```powershell
+git clone https://github.com/sreeramganesh/student-information-system.git
+cd student-information-system
+```
+
+### 3. Install Dependencies
+```powershell
+pip install -r requirements.txt
+```
+
+### 4. Configure Environment
+Copy the example environment file:
+```powershell
+cp backend/.env.example backend/.env
+```
+Update `backend/.env` with your MySQL credentials:
+```env
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=your_mysql_password
+DB_NAME=sis_db
+DATABASE_URL=mysql+pymysql://root:your_mysql_password@127.0.0.1:3306/sis_db
+JWT_SECRET_KEY=your_secret_jwt_key
+FLASK_ENV=development
+CORS_ORIGINS=*
+```
+
+### 5. Initialize the Database
+Create the database and tables using the provided SQL schema:
+```powershell
+mysql -u root -p sis_db < backend/mysql-schema.sql
+```
+
+Verify the connection:
 ```powershell
 python backend/test_connection.py
 ```
 
-You should see:
-```text
-Database connection successful!
-Connected Database : sis_db
-Total Tables Found : 13
-ALL DATABASE CHECKS PASSED SUCCESSFULLY!
-```
-
----
-
-### 4. Run the Application
-
-Start the Flask server from the project root:
-
+### 6. Run the Application
 ```powershell
 python backend/app.py
 ```
-
-The application will start at:
-👉 **`http://127.0.0.1:5000`** (or `http://localhost:5000`)
-
----
-
-## 🌐 Navigating the Application
-
-The Flask server automatically serves both the backend API and the frontend pages.
-
-| Page | URL | Description |
-| :--- | :--- | :--- |
-| **Login / Sign Up** | [`http://localhost:5000/`](http://localhost:5000/) | Main portal entry (defaults to `login.html`) |
-| **Student Dashboard** | [`http://localhost:5000/student`](http://localhost:5000/student) | Courses, attendance, marks, fees & transcripts |
-| **Faculty Dashboard** | [`http://localhost:5000/faculty`](http://localhost:5000/faculty) | Class management, attendance marking, grading |
-| **Admin Dashboard** | [`http://localhost:5000/admin`](http://localhost:5000/admin) | User management, courses, system stats |
-| **Alumni Portal** | [`http://localhost:5000/alumni`](http://localhost:5000/alumni) | Alumni network, transcript requests, fee receipts |
-| **Profile Completion** | [`http://localhost:5000/complete-profile`](http://localhost:5000/complete-profile) | Admission details form for newly registered students |
-| **API Health Check** | [`http://localhost:5000/api/health`](http://localhost:5000/api/health) | Verifies backend status |
+Open your browser and navigate to:
+👉 **`http://localhost:5000`**
 
 ---
 
-## 📁 Project Structure
+## ☁️ Deployment on Vercel
 
-```text
-SIS_ORIGINAL/
-├── backend/
-│   ├── app.py                  # Flask app factory, static file routing, API registration
-│   ├── config.py               # Environment configuration & DB connection string builder
-│   ├── extensions.py           # SQLAlchemy, Migrate, JWT, Bcrypt initialization
-│   ├── models.py               # SQLAlchemy ORM models (Users, Students, Courses, etc.)
-│   ├── mysql-schema.sql        # MySQL table definitions and constraints
-│   ├── requirements.txt        # Python package dependencies
-│   ├── test_connection.py      # Script to verify MySQL connectivity
-│   ├── routes/                 # Modular API blueprints
-│   │   ├── admin.py
-│   │   ├── alumni.py
-│   │   ├── auth.py
-│   │   ├── faculty.py
-│   │   └── students.py
-│   └── utils/
-│       ├── db.py               # Raw PyMySQL connection helper
-│       └── decorators.py       # Role-based access control decorators (@role_required)
-└── frontend/
-    ├── login.html              # Authentication portal (Student, Faculty, Admin, Alumni)
-    ├── student.html            # Student dashboard
-    ├── faculty.html            # Faculty portal
-    ├── admin.html              # Admin management dashboard
-    ├── alumni.html             # Alumni portal
-    ├── complete-profile.html   # Post-signup admission profile completion
-    ├── api-client.js           # Fetch wrapper for calling backend API with JWT
-    ├── dashboard.js            # Shared UI utilities and logout helpers
-    └── dashboard.css           # Global stylesheets
-```
+This repository includes [`vercel.json`](vercel.json) and [`api/index.py`](api/index.py) configured out of the box for serverless deployment.
 
-
----
-
-## ☁️ Deployment Guide (GitHub & Vercel)
-
-### 1. Push to GitHub
-
-1. Create a new repository on [GitHub](https://github.com/new) (e.g. `sis-portal`). Do **not** initialize with README or license.
-2. Link your local repository and push:
-   ```powershell
-   git remote add origin https://github.com/<your-username>/<your-repo-name>.git
-   git push -u origin main
-   ```
-   *(Note: `.env` is automatically ignored by `.gitignore` to protect your credentials).*
-
----
-
-### 2. Host on Vercel
-
-Because Vercel runs in the cloud, it cannot connect to a local `127.0.0.1` MySQL instance. You will need a cloud-hosted MySQL database (such as **Aiven for MySQL**, **TiDB Cloud**, or **Railway**).
-
-#### Step A: Setup Cloud Database
-1. Create a free MySQL database on [Aiven](https://aiven.io/) or [TiDB Cloud](https://tidbcloud.com/).
-2. Run [`backend/mysql-schema.sql`](backend/mysql-schema.sql) in your cloud database query console to create the tables.
-3. Obtain your cloud database connection string (`DATABASE_URL`).
-
-#### Step B: Deploy to Vercel
-1. Log in to [Vercel](https://vercel.com) and click **"Add New..."** → **"Project"**.
-2. Select and import your GitHub repository.
-3. In **Environment Variables**, add:
-   - `DATABASE_URL` = `mysql+pymysql://<user>:<password>@<host>:<port>/<dbname>`
-   - `JWT_SECRET_KEY` = `your_strong_random_jwt_secret_key`
+1. **Cloud Database**: Create a free cloud MySQL instance on [TiDB Cloud](https://tidbcloud.com/) or [Aiven for MySQL](https://aiven.io/). Import `backend/mysql-schema.sql`.
+2. **Import to Vercel**: Go to [vercel.com/new](https://vercel.com/new) and select `student-information-system`.
+3. **Environment Variables**: In Vercel Project Settings, add:
+   - `DATABASE_URL` = `mysql+pymysql://<user>:<password>@<cloud-host>:<port>/<dbname>`
+   - `JWT_SECRET_KEY` = `<your-jwt-secret>`
    - `FLASK_ENV` = `production`
    - `CORS_ORIGINS` = `*`
-   - *(Optional if SSL certificate required)*: `DB_SSL_CA` = `ca.pem`
-4. Click **Deploy**. Vercel will build the frontend assets and serverless Python backend automatically!
+4. **Deploy**: Click **Deploy**. Vercel will host your static frontend on edge CDN and the Flask API on serverless compute.
