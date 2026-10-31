@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Complete Your Record — Student Information System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="dashboard.css">
+<script src="api-client.js"></script>
+<style>
+  body{ background:var(--paper); }
+  .wrap{ max-width:720px; margin:0 auto; padding:44px 20px 80px; }
+  .head{ margin-bottom:30px; }
+  .head .eyebrow{ font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--gold); margin:0 0 8px; }
+  .head h1{ font-family:'Fraunces', serif; font-weight:500; font-size:1.9rem; margin:0 0 8px; color:var(--ink); }
+  .head p{ font-size:13.5px; color:var(--slate); margin:0; max-width:520px; line-height:1.6; }
+
+  .step-progress{ display:flex; gap:6px; margin:20px 0 34px; }
+  .step-progress .dot{ height:4px; flex:1; background:var(--line); border-radius:3px; }
+  .step-progress .dot.done{ background:var(--gold); }
+
+  .form-section{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:26px; margin-bottom:20px; }
+  .form-section h2{ font-family:'Fraunces', serif; font-size:1.15rem; font-weight:500; margin:0 0 4px; color:var(--ink); }
+  .form-section .sub{ font-size:12.5px; color:var(--slate); margin:0 0 20px; }
+
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:12.5px; font-weight:500; color:var(--slate); margin-bottom:6px; }
+  .field input, .field select{ width:100%; padding:11px 13px; border:1px solid var(--line); border-radius:7px; background:#fff; font-size:14px; font-family:inherit; color:var(--charcoal); }
+  .field input:focus-visible, .field select:focus-visible{ outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(176,141,87,0.18); }
+  .row-2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .row-3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+  @media (max-width:600px){ .row-2, .row-3{ grid-template-columns:1fr; } }
+
+  .marks-table{ width:100%; border-collapse:collapse; margin-bottom:12px; }
+  .marks-table th{ text-align:left; font-family:'IBM Plex Mono', monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--slate); padding:8px 6px; border-bottom:1px solid var(--line); }
+  .marks-table td{ padding:6px; }
+  .marks-table input{ width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-size:13.5px; }
+  .marks-table .rm-row{ background:none; border:none; color:var(--maroon); cursor:pointer; font-size:12px; padding:4px 8px; }
+
+  .add-row-btn{ font-size:12.5px; font-weight:600; color:var(--teal); background:none; border:none; cursor:pointer; padding:6px 0; }
+
+  .submit-bar{ display:flex; justify-content:flex-end; gap:10px; margin-top:8px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="head">
+    <p class="eyebrow">One-time setup · Student record</p>
+    <h1>Complete your record</h1>
+    <p>Before you can access your dashboard, the registrar's office needs a few more details on file — this mirrors your admission form and only needs to be filled once.</p>
+  </div>
+
+  <div class="step-progress">
+    <div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot"></div>
+  </div>
+
+  <form id="form-admission">
+
+    <!-- PERSONAL -->
+    <div class="form-section">
+      <h2>Personal details</h2>
+      <p class="sub">As per your 10th / 12th class certificate.</p>
+      <div class="row-2">
+        <div class="field"><label>Date of birth</label><input type="date" id="dob" required></div>
+        <div class="field"><label>Gender</label>
+          <select id="gender" required>
+            <option value="">Select</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="transgender">Transgender</option>
+          </select>
+        </div>
+      </div>
+      <div class="row-2">
+        <div class="field"><label>Nationality</label><input type="text" id="nationality" value="Indian" required></div>
+        <div class="field"><label>Community</label>
+          <select id="community" required>
+            <option value="">Select</option>
+            <option value="sc">SC</option>
+            <option value="st">ST</option>
+            <option value="sca">SCA</option>
+            <option value="mbc_dnc">MBC / DNC</option>
+            <option value="bc">BC</option>
+            <option value="bc_muslim">BC (Muslim)</option>
+            <option value="others">Others</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- PARENT / GUARDIAN -->
+    <div class="form-section">
+      <h2>Parent / Guardian</h2>
+      <p class="sub">Used for records and emergency contact.</p>
+      <div class="field"><label>Full name</label><input type="text" id="parent-name" required></div>
+      <div class="row-2">
+        <div class="field"><label>Occupation</label>
+          <select id="parent-occupation" required>
+            <option value="">Select</option>
+            <option>Agriculture</option><option>Business</option><option>Medical</option>
+            <option>Engineering</option><option>Law practice</option><option>Public / Govt. service</option>
+            <option>Private service</option><option>Teaching / Research</option><option>Others</option>
+          </select>
+        </div>
+        <div class="field"><label>Annual income</label>
+          <select id="parent-income" required>
+            <option value="">Select</option>
+            <option value="below_50k">Below ₹50,000</option>
+            <option value="50k_1l">₹50,000 – ₹1,00,000</option>
+            <option value="1l_2l">₹1,00,000 – ₹2,00,000</option>
+            <option value="2l_3l">₹2,00,000 – ₹3,00,000</option>
+            <option value="above_3l">Above ₹3,00,000</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADDRESS & CONTACT -->
+    <div class="form-section">
+      <h2>Address &amp; contact</h2>
+      <p class="sub">Used for correspondence from the registrar's office.</p>
+      <div class="field"><label>Address</label><input type="text" id="address-line" placeholder="House / street / city" required></div>
+      <div class="row-2">
+        <div class="field"><label>PIN code</label><input type="text" id="pincode" inputmode="numeric" maxlength="6" required></div>
+        <div class="field"><label>Phone number</label><input type="tel" id="phone" required></div>
+      </div>
+    </div>
+
+    <!-- ACADEMIC -->
+    <div class="form-section">
+      <h2>Academic record</h2>
+      <p class="sub">Board of qualifying exam, course opted, and HSC subject-wise marks.</p>
+      <div class="row-2">
+        <div class="field"><label>Board of qualifying exam</label>
+          <select id="board-exam" required>
+            <option value="">Select</option>
+            <option value="tn_hsc_academic">TN – HSC (Academic)</option>
+            <option value="tn_hsc_vocational">TN – HSC (Vocational)</option>
+            <option value="cbse">CBSE</option>
+            <option value="isc">ISC</option>
+            <option value="others">Others</option>
+          </select>
+        </div>
+        <div class="field"><label>Course opted</label><input type="text" id="course-opted" placeholder="e.g. B.Tech CSE" required></div>
+      </div>
+
+      <label style="display:block;font-size:12.5px;font-weight:500;color:var(--slate);margin:18px 0 8px;">HSC subject-wise marks</label>
+      <table class="marks-table">
+        <thead><tr><th>Subject</th><th>Max marks</th><th>Marks obtained</th><th></th></tr></thead>
+        <tbody id="marks-rows"></tbody>
+      </table>
+      <button type="button" class="add-row-btn" onclick="addMarksRow('')">+ Add subject</button>
+    </div>
+
+    <div class="submit-bar">
+      <button class="btn btn-primary" id="btn-submit-profile" type="submit">Save &amp; Continue</button>
+    </div>
+  </form>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+let ME = null;
+let rowCount = 0;
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+const DEFAULT_SUBJECTS = ['Physics', 'Chemistry', 'Mathematics', 'Related Subject I', 'Related Subject II'];
+
+(async function init(){
+  ME = await sisRequireRole('student');
+  if (!ME) return;
+
+  const student = await api('/students/me');
+  if (student && student.profile_completed){
+    window.location.href = 'student.html';
+    return;
+  }
+
+  DEFAULT_SUBJECTS.forEach(s => addMarksRow(s));
+})();
+
+function addMarksRow(subjectName){
+  rowCount++;
+  const tbody = document.getElementById('marks-rows');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" class="mk-subject" value="${subjectName}" placeholder="Subject name" required></td>
+    <td><input type="number" class="mk-max" min="1" placeholder="100" required></td>
+    <td><input type="number" class="mk-obtained" min="0" placeholder="0" required></td>
+    <td><button type="button" class="rm-row" onclick="this.closest('tr').remove()">Remove</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+
+document.getElementById('form-admission').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const submitBtn = document.getElementById('btn-submit-profile') || e.target.querySelector('.submit-bar button');
+  if (submitBtn.disabled) return;
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Saving...';
+
+  try {
+    const payload = {
+      student_id: ME.id,
+      date_of_birth: document.getElementById('dob').value,
+      gender: document.getElementById('gender').value,
+      nationality: document.getElementById('nationality').value.trim(),
+      community: document.getElementById('community').value,
+      parent_name: document.getElementById('parent-name').value.trim(),
+      parent_occupation: document.getElementById('parent-occupation').value,
+      parent_annual_income: document.getElementById('parent-income').value,
+      address_line: document.getElementById('address-line').value.trim(),
+      pincode: document.getElementById('pincode').value.trim(),
+      phone: document.getElementById('phone').value.trim(),
+      board_of_exam: document.getElementById('board-exam').value,
+      course_opted: document.getElementById('course-opted').value.trim(),
+      marks: Array.from(document.querySelectorAll('#marks-rows tr')).map(tr => ({
+        subject_name: tr.querySelector('.mk-subject').value.trim(),
+        max_marks: Number(tr.querySelector('.mk-max').value),
+        marks_obtained: Number(tr.querySelector('.mk-obtained').value)
+      })).filter(r => r.subject_name)
+    };
+
+    const res = await api('/students/me/admission', { method: 'POST', body: payload });
+
+    // Verify authentication token is still present before redirecting
+    const token = getToken();
+    if (!token) {
+      throw new Error('Authentication session lost. Please sign in again.');
+    }
+
+    submitBtn.textContent = 'Profile saved successfully';
+    showToast((res && res.message) || 'Profile saved successfully');
+
+    setTimeout(() => {
+      window.location.href = 'student.html';
+    }, 500);
+
+  } catch (err) {
+    console.error('Profile submit failed:', err);
+    showToast(err.message || 'Something went wrong — check the browser console for details.');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Save & Continue';
+  }
+});
+</script>
+</body>
+</html>

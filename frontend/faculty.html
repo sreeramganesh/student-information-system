@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Faculty Dashboard — Student Information System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="dashboard.css">
+<script src="api-client.js"></script>
+</head>
+<body>
+
+<div class="app-shell">
+  <div class="sb-overlay" id="sbOverlay"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-brand">
+      <div class="seal">S</div>
+      <div>
+        <div class="sb-title">Records Portal</div>
+        <div class="sb-sub">Faculty Access</div>
+      </div>
+    </div>
+
+    <ul class="sb-nav">
+      <li class="nav-label">Overview</li>
+      <li><button class="nav-item active" data-view="overview">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
+        Dashboard
+      </button></li>
+
+      <li class="nav-label">Classes</li>
+      <li><button class="nav-item" data-view="classes">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="4.5" width="17" height="14" rx="1.5"/><path d="M3.5 9h17"/><path d="M8 4.5v-1M16 4.5v-1"/></svg>
+        Class list
+      </button></li>
+      <li><button class="nav-item" data-view="attendance">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="5" width="16" height="15" rx="1.5"/><path d="M4 9.5h16M9 4v3M15 4v3"/><path d="m8.5 14 2 2 4-4"/></svg>
+        Mark attendance
+      </button></li>
+
+      <li class="nav-label">Academics</li>
+      <li><button class="nav-item" data-view="marks">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V6.5A2.5 2.5 0 0 1 6.5 4H18v14"/><path d="M6.5 4A2.5 2.5 0 0 0 4 19a2.5 2.5 0 0 0 2.5-2.5H18"/><path d="M8 8h6M8 11h6"/></svg>
+        Upload marks
+      </button></li>
+      <li><button class="nav-item" data-view="results">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 2 8l10 5 8-4v6"/><path d="M6 10.5V16c0 1.2 2.7 3 6 3s6-1.8 6-3v-5.5"/></svg>
+        Upload result
+      </button></li>
+
+      <li class="nav-label">My record</li>
+      <li><button class="nav-item" data-view="details">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.3-3.6 4.3-5.5 7.5-5.5s6.2 1.9 7.5 5.5"/></svg>
+        My details
+      </button></li>
+    </ul>
+
+    <div class="sb-spacer"></div>
+
+    <div class="mini-id role-faculty">
+      <span class="punch"></span>
+      <div class="role">Faculty</div>
+      <div class="name" id="sb-name">Loading…</div>
+      <div class="meta" id="sb-meta">—</div>
+    </div>
+    <button class="sb-logout" onclick="sisSignOut()">Sign out</button>
+  </aside>
+
+  <main class="main-col">
+    <header class="topbar">
+      <div class="tb-left">
+        <button class="hamburger" id="hamburger" aria-label="Open menu">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div class="tb-title">
+          <p class="eyebrow">Faculty Access</p>
+          <h1 id="welcome-name">Welcome</h1>
+        </div>
+      </div>
+      <div class="tb-right">
+        <span class="role-chip" id="role-chip">Loading…</span>
+        <div class="avatar-dot" style="background:var(--gold)" id="avatar-initials">··</div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- OVERVIEW -->
+      <section class="view active" id="view-overview">
+        <div class="stat-strip">
+          <div class="stat-card"><p class="stat-label">Courses assigned</p><div class="stat-value" id="stat-courses">—</div></div>
+          <div class="stat-card"><p class="stat-label">Total students</p><div class="stat-value" id="stat-students">—</div></div>
+          <div class="stat-card"><p class="stat-label">Avg. attendance</p><div class="stat-value" id="stat-avg-att">—</div></div>
+          <div class="stat-card"><p class="stat-label">Results pending</p><div class="stat-value" id="stat-results-pending">—</div><p class="stat-sub warn">Unpublished</p></div>
+        </div>
+
+        <div class="section-head"><h2>Quick actions</h2><span class="rec-count">5 modules</span></div>
+        <div class="card-grid">
+          <div class="rec-card" onclick="document.querySelector('[data-view=classes]').click()">
+            <p class="rec-no">REC · 01</p><h3>Class list</h3><p>View enrolled students across your sections.</p>
+          </div>
+          <div class="rec-card" onclick="document.querySelector('[data-view=attendance]').click()">
+            <p class="rec-no">REC · 02</p><h3>Mark attendance</h3><p>Submit today's attendance for a section.</p>
+          </div>
+          <div class="rec-card" onclick="document.querySelector('[data-view=marks]').click()">
+            <p class="rec-no">REC · 03</p><h3>Upload marks</h3><p>Internal assessment marks by section.</p>
+          </div>
+          <div class="rec-card" onclick="document.querySelector('[data-view=results]').click()">
+            <p class="rec-no">REC · 04</p><h3>Upload result</h3><p>Final semester results and grade entry.</p>
+          </div>
+          <div class="rec-card" onclick="document.querySelector('[data-view=details]').click()">
+            <p class="rec-no">REC · 05</p><h3>My details</h3><p>Contact info and office hours.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- CLASS LIST -->
+      <section class="view" id="view-classes">
+        <div class="section-head">
+          <h2>Class list</h2>
+          <select id="course-select-classes" onchange="loadClassList()" style="padding:6px 10px;border:1px solid var(--line);border-radius:6px;font-size:12.5px;"></select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Roll no.</th><th>Name</th><th>Attendance</th></tr></thead>
+            <tbody id="classlist-tbody"><tr><td colspan="3">Select a course above.</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ATTENDANCE -->
+      <section class="view" id="view-attendance">
+        <div class="section-head">
+          <h2>Mark attendance</h2>
+          <select id="course-select-attendance" onchange="loadAttendanceForm()" style="padding:6px 10px;border:1px solid var(--line);border-radius:6px;font-size:12.5px;"></select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Roll no.</th><th>Name</th><th>Status</th></tr></thead>
+            <tbody id="att-body"><tr><td colspan="3">Select a course above.</td></tr></tbody>
+          </table>
+        </div>
+        <button class="btn btn-primary" onclick="submitAttendance()">Submit attendance</button>
+      </section>
+
+      <!-- UPLOAD MARKS -->
+      <section class="view" id="view-marks">
+        <div class="section-head"><h2>Upload marks</h2></div>
+        <div class="panel">
+          <h3>Internal assessment entry</h3>
+          <p class="panel-sub">Select course and assessment, then enter marks for one student.</p>
+          <form id="form-marks">
+            <div class="row-2">
+              <div class="field"><label>Course</label><select id="marks-course"></select></div>
+              <div class="field"><label>Assessment</label><select id="marks-assessment"><option>Internal 1</option><option selected>Internal 2</option><option>Assignment</option></select></div>
+            </div>
+            <div class="field"><label>Roll no.</label><input type="text" id="marks-roll" placeholder="e.g. 24CSE041"></div>
+            <div class="field"><label>Marks (out of 30)</label><input type="number" id="marks-value" min="0" max="30" placeholder="e.g. 27"></div>
+            <button class="btn btn-primary" type="submit">Save marks</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- UPLOAD RESULT -->
+      <section class="view" id="view-results">
+        <div class="section-head"><h2>Upload result</h2></div>
+        <div class="panel">
+          <h3>Final semester result entry</h3>
+          <p class="panel-sub">Publishing makes the grade visible to the student.</p>
+          <form id="form-results">
+            <div class="row-2">
+              <div class="field"><label>Course</label><select id="results-course"></select></div>
+              <div class="field"><label>Roll no.</label><input type="text" id="results-roll" placeholder="e.g. 24CSE041"></div>
+            </div>
+            <div class="row-2">
+              <div class="field"><label>Internal (30)</label><input type="number" id="results-internal" min="0" max="30"></div>
+              <div class="field"><label>External (70)</label><input type="number" id="results-external" min="0" max="70"></div>
+            </div>
+            <div class="field"><label>Grade</label><select id="results-grade"><option>A+</option><option>A</option><option>B+</option><option>B</option><option>C</option></select></div>
+            <button class="btn btn-primary" type="submit">Publish result</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- MY DETAILS -->
+      <section class="view" id="view-details">
+        <div class="section-head"><h2>My details</h2></div>
+        <div class="panel">
+          <h3>Personal information</h3>
+          <p class="panel-sub">Visible to students in course listings.</p>
+          <form id="form-details">
+            <div class="row-2">
+              <div class="field"><label>Full name</label><input type="text" id="det-name" disabled></div>
+              <div class="field"><label>Faculty ID</label><input type="text" id="det-code" disabled></div>
+            </div>
+            <div class="row-2">
+              <div class="field"><label>Email</label><input type="email" id="det-email"></div>
+              <div class="field"><label>Office hours</label><input type="text" id="det-hours" placeholder="e.g. Mon–Fri, 2–4 PM"></div>
+            </div>
+            <button class="btn btn-primary" type="submit">Save changes</button>
+          </form>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="dashboard.js"></script>
+<script>
+let ME = null;
+let MY_COURSES = [];
+
+(async function init(){
+  ME = await sisRequireRole('faculty');
+  if (!ME) return;
+
+  sisFillText('sb-name', ME.full_name);
+  sisFillText('welcome-name', 'Welcome, ' + ME.full_name.split(' ')[0]);
+  const initials = ME.full_name.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+  sisFillText('avatar-initials', initials);
+
+  const faculty = await api('/faculty/me');
+  sisFillText('sb-meta', `ID ${faculty.faculty_code} · Dept. ${faculty.department || '—'}`);
+  document.getElementById('det-name').value = faculty.full_name;
+  document.getElementById('det-code').value = faculty.faculty_code || '';
+  document.getElementById('det-email').value = faculty.email || '';
+  document.getElementById('det-hours').value = faculty.office_hours || '';
+
+  MY_COURSES = await api('/faculty/me/courses');
+  sisFillText('role-chip', `${faculty.department || 'Dept.'} · ${MY_COURSES.length} course${MY_COURSES.length===1?'':'s'}`);
+  sisFillText('stat-courses', MY_COURSES.length);
+
+  ['course-select-classes','course-select-attendance','marks-course','results-course'].forEach(id => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = MY_COURSES.map(c => `<option value="${c.id}">${c.name}</option>`).join('') || '<option>No courses assigned</option>';
+  });
+
+  if (MY_COURSES.length){
+    await loadClassList();
+    await loadAttendanceForm();
+  }
+  await loadOverviewStats();
+})();
+
+async function loadOverviewStats(){
+  if (!MY_COURSES.length) return;
+  const stats = await api('/faculty/me/stats');
+  sisFillText('stat-students', stats.students_count ?? '—');
+  sisFillText('stat-avg-att', stats.avg_attendance !== null ? stats.avg_attendance + '%' : '—');
+  sisFillText('stat-results-pending', stats.results_pending ?? 0);
+}
+
+async function loadClassList(){
+  const courseId = document.getElementById('course-select-classes').value;
+  const tbody = document.getElementById('classlist-tbody');
+  if (!courseId){ tbody.innerHTML = '<tr><td colspan="3">No course selected.</td></tr>'; return; }
+
+  const roster = await api(`/faculty/courses/${courseId}/class-list`);
+  if (!roster.length){ tbody.innerHTML = '<tr><td colspan="3">No students registered yet.</td></tr>'; return; }
+
+  tbody.innerHTML = roster.map(r => {
+    const pct = r.attendance_pct;
+    const tagClass = pct === null ? 'neutral' : (pct >= 75 ? 'good' : 'bad');
+    const pctLabel = pct === null ? 'No data' : pct + '%';
+    return `<tr><td>${r.roll_no}</td><td>${r.full_name}</td><td><span class="tag ${tagClass}">${pctLabel}</span></td></tr>`;
+  }).join('');
+}
+
+async function loadAttendanceForm(){
+  const courseId = document.getElementById('course-select-attendance').value;
+  const tbody = document.getElementById('att-body');
+  if (!courseId){ tbody.innerHTML = '<tr><td colspan="3">No course selected.</td></tr>'; return; }
+
+  const roster = await api(`/faculty/courses/${courseId}/class-list`);
+  if (!roster.length){ tbody.innerHTML = '<tr><td colspan="3">No students registered yet.</td></tr>'; return; }
+
+  tbody.innerHTML = roster.map(r => `
+    <tr data-student="${r.student_id}">
+      <td>${r.roll_no}</td>
+      <td>${r.full_name}</td>
+      <td>
+        <select class="att-status" style="padding:5px 8px;border:1px solid var(--line);border-radius:6px;font-size:12.5px;">
+          <option value="present" selected>Present</option>
+          <option value="absent">Absent</option>
+        </select>
+      </td>
+    </tr>`).join('');
+}
+
+async function submitAttendance(){
+  const courseId = document.getElementById('course-select-attendance').value;
+  if (!courseId){ showToast('Select a course first.'); return; }
+
+  const rows = document.querySelectorAll('#att-body tr[data-student]');
+  const records = Array.from(rows).map(tr => ({
+    student_id: tr.dataset.student,
+    status: tr.querySelector('.att-status').value,
+  }));
+
+  try {
+    await api(`/faculty/courses/${courseId}/attendance`, { method: 'POST', body: { records } });
+    showToast('Attendance submitted.');
+  } catch (err) {
+    showToast(err.message);
+  }
+}
+
+document.getElementById('form-marks').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const course_id = document.getElementById('marks-course').value;
+  const assessment = document.getElementById('marks-assessment').value;
+  const roll_no = document.getElementById('marks-roll').value.trim();
+  const marks = Number(document.getElementById('marks-value').value);
+
+  try {
+    await api('/faculty/marks', { method: 'POST', body: { course_id, assessment, roll_no, marks } });
+    showToast(`Marks saved for ${roll_no}.`);
+    e.target.reset();
+  } catch (err) {
+    showToast(err.message);
+  }
+});
+
+document.getElementById('form-results').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const course_id = document.getElementById('results-course').value;
+  const roll_no = document.getElementById('results-roll').value.trim();
+  const internal = Number(document.getElementById('results-internal').value);
+  const external = Number(document.getElementById('results-external').value);
+  const grade = document.getElementById('results-grade').value;
+
+  try {
+    await api('/faculty/results', { method: 'POST', body: { course_id, roll_no, internal, external, grade } });
+    showToast(`Result published for ${roll_no}.`);
+    e.target.reset();
+  } catch (err) {
+    showToast(err.message);
+  }
+});
+
+document.getElementById('form-details').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('det-email').value.trim();
+  const office_hours = document.getElementById('det-hours').value.trim();
+
+  try {
+    await api('/faculty/me', { method: 'PUT', body: { email, office_hours } });
+    showToast('Details updated.');
+  } catch (err) {
+    showToast(err.message);
+  }
+});
+</script>
+</body>
+</html>
