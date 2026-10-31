@@ -130,3 +130,40 @@ SIS_ORIGINAL/
     ├── dashboard.js            # Shared UI utilities and logout helpers
     └── dashboard.css           # Global stylesheets
 ```
+
+
+---
+
+## ☁️ Deployment Guide (GitHub & Vercel)
+
+### 1. Push to GitHub
+
+1. Create a new repository on [GitHub](https://github.com/new) (e.g. `sis-portal`). Do **not** initialize with README or license.
+2. Link your local repository and push:
+   ```powershell
+   git remote add origin https://github.com/<your-username>/<your-repo-name>.git
+   git push -u origin main
+   ```
+   *(Note: `.env` is automatically ignored by `.gitignore` to protect your credentials).*
+
+---
+
+### 2. Host on Vercel
+
+Because Vercel runs in the cloud, it cannot connect to a local `127.0.0.1` MySQL instance. You will need a cloud-hosted MySQL database (such as **Aiven for MySQL**, **TiDB Cloud**, or **Railway**).
+
+#### Step A: Setup Cloud Database
+1. Create a free MySQL database on [Aiven](https://aiven.io/) or [TiDB Cloud](https://tidbcloud.com/).
+2. Run [`backend/mysql-schema.sql`](backend/mysql-schema.sql) in your cloud database query console to create the tables.
+3. Obtain your cloud database connection string (`DATABASE_URL`).
+
+#### Step B: Deploy to Vercel
+1. Log in to [Vercel](https://vercel.com) and click **"Add New..."** → **"Project"**.
+2. Select and import your GitHub repository.
+3. In **Environment Variables**, add:
+   - `DATABASE_URL` = `mysql+pymysql://<user>:<password>@<host>:<port>/<dbname>`
+   - `JWT_SECRET_KEY` = `your_strong_random_jwt_secret_key`
+   - `FLASK_ENV` = `production`
+   - `CORS_ORIGINS` = `*`
+   - *(Optional if SSL certificate required)*: `DB_SSL_CA` = `ca.pem`
+4. Click **Deploy**. Vercel will build the frontend assets and serverless Python backend automatically!
