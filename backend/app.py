@@ -41,6 +41,13 @@ def create_app():
 
     @app.get("/<path:filename>")
     def serve_frontend(filename):
+        # Handle rewritten path with frontend/ prefix if any
+        if filename.startswith("frontend/"):
+            filename = filename[len("frontend/"):]
+
+        if not filename or filename in ("login", "index"):
+            return send_from_directory(FRONTEND_DIR, "login.html")
+
         safe_path = os.path.abspath(os.path.join(FRONTEND_DIR, filename))
         if not safe_path.startswith(FRONTEND_DIR):
             return {"error": "Not found"}, 404
