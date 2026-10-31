@@ -1,5 +1,7 @@
 # 🎓 Student Information System (SIS)
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-sis--portal--gold.vercel.app-brightgreen?style=for-the-badge&logo=vercel)](https://sis-portal-gold.vercel.app)
+
 [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.14-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.0.3-black?logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0-orange?logo=mysql&logoColor=white)](https://www.mysql.com/)
@@ -8,6 +10,8 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 A production-ready, full-stack **Student Information System (SIS)** designed for colleges and universities. Built with a high-performance **Python Flask** REST API, a normalized **MySQL** database, and a responsive **HTML5/CSS3/JavaScript** frontend with role-based access control.
+
+> 🌐 **Live Application URL**: [https://sis-portal-gold.vercel.app](https://sis-portal-gold.vercel.app)
 
 ---
 
@@ -190,3 +194,5 @@ This repository includes [`vercel.json`](vercel.json) and [`api/index.py`](api/i
    - `FLASK_ENV` = `production`
    - `CORS_ORIGINS` = `*`
 4. **Deploy**: Click **Deploy**. Vercel will host your static frontend on edge CDN and the Flask API on serverless compute.
+
+👉 **Production Deployment:** [https://sis-portal-gold.vercel.app](https://sis-portal-gold.vercel.app)
